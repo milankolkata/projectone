@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<div class="card" style="width: 18rem;">
+    <div class="card-header">
+       <strong> {{employee.first_name}} {{employee.last_name}} </strong>
+    </div>
+    <ul class="list-group list-group-flush">
+
+        <li class="list-group-item">
+        <strong>Unique ID: </strong> {{employee.team_code}}
+        </li>
+    
+
+      <li class="list-group-item">
+        <strong>Email: </strong> {{employee.email}}
+      </li>
+
+      <li class="list-group-item">
+        <strong>Phone Number: </strong> {{employee.phone_number}}
+      </li>
+
+      <li class="list-group-item">
+        <strong>Date of Birth: </strong> {{employee.date_of_birth}}
+      </li>
+
+      <li class="list-group-item">
+        <strong>Position: </strong> {{employee.position}}
+      </li>
+
+      <li class="list-group-item">
+        <strong>Salary: </strong> {{employee.salary}}
+      </li>
+
+
+      <li class="list-group-item">
+        <strong>Skill-Set: </strong> {{employee.skills}}
+      </li>
+
+      <li class="list-group-item">
+        <strong>Qualifications:</strong> {{employee.skills}}
+      </li>
+
+
+      <li class="list-group-item">
+        <strong>Advance:</strong> {{employee.skills}}
+      </li>
+
+
+    </ul>
+  </div>
+
+</br>
+<a href="{% url 'employee_details' %}" class="btn btn-secondary" >Back</a>
+<a href="{% url 'employee_details' %}" class="btn btn-danger" >Delete</a>
+  
+
+
+
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    {% if user.is_authenticated %}
+
+        <div class="col-md-6 offset-md-3">
+        <h1>Add Employee</h1>
+
+        <form method="POST" action="{% url 'add_employee' %}">
+            <br/>
+            {% csrf_token %}
+
+            {{form.as_p}}
+
+            <button type="submit" class="btn btn-secondary">Submit</button>
+
+    {% else %}
+        <script>
+            window.location.href = "{% url 'login_user' %}";
+        </script>
+    {% endif %}
+
+
+
+{% endblock %}
