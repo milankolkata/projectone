@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    {% if user.is_authenticated %}
+        
+
+    <h1>Late Today</h1>
+
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <!-- <th scope="col">Email</th>
+
+                <th scope="col">date_of_birth</th> -->
+                <th scope="col">Position</th>
+                <!-- <th scope="col">Last</th>
+                <th scope="col">salary</th> -->
+                <th scope="col">Entry Time</th>
+                <th scope="col">Skill Set</th>
+                <th scope="col">Attendance History</th>
+            </tr>
+        </thead>
+    <tbody>
+        {% if today_late %}
+            {% for attend in today_late %}
+                <tr>
+                
+                    <th scope="row">{{attend.employee.team_code}}</th>
+                    <td>{{ attend.employee.first_name }} {{ attend.employee.last_name }}</td>
+                    <td>{{attend.employee.position}}</td>
+                    <td>{{attend.time}}</td>
+                    <td>{{attend.employee.skills}}</td>
+
+                    <td><a href="{% url 'home' %}">-- View --</a></td> 
+
+                </tr>                 
+            {% endfor %}
+        {% endif %}
+
+
+            </tr>
+        </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+    {% else %}
+        <script>
+            window.location.href = "{% url 'login_user' %}";
+        </script>
+    {% endif %}
+
+
+
+{% endblock %}

@@ -1,5 +1,8 @@
 from django import forms
 from .models import Employee, Attendance
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+
 
 # class EmployeeForm(forms.ModelForm):
 #     class Meta:
@@ -25,3 +28,35 @@ class EmployeeForm(forms.ModelForm):
         exclude = ('user',)
 
 # atteandamce
+class EmployeeSelectionForm(forms.Form):
+    employee = forms.ModelChoiceField(
+        queryset=Employee.objects.all(),
+        label="Select an Employee",
+        empty_label="Choose an employee"
+    )
+
+    attendance_status = forms.ChoiceField(
+        choices=[('present', 'Present'), ('absent', 'Absent')],
+        widget=forms.RadioSelect,
+        label="Attendance Status"
+    )
+
+    date = forms.DateField(
+        initial=timezone.now().date(),
+        required=False,
+        widget=forms.HiddenInput()  # or use a visible input field
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        employee = cleaned_data.get('employee')
+        date = cleaned_data.get('date')
+
+        if employee and date:
+            # Check if an attendance record already exists for this employee on the given date
+            if Attendance.objects.filter(employee=employee, date=date).exists():
+                raise ValidationError(
+                    f"Attendance for {employee} on {date} already exists."
+                )
+
+        return cleaned_data
