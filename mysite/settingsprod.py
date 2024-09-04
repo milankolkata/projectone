@@ -74,14 +74,11 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'defaultdb',
-        'USER': os.getenv('DB_USER1'),
-        'PASSWORD': os.getenv('DB_PASSWORD1'),
-        'HOST': 'dbaas-db-6162201-do-user-17564854-0.i.db.ondigitalocean.com',
-        'PORT': '25060',
-        'OPTIONS': {
-            'sslmode': 'require',
-        },
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
     }
 }
 
