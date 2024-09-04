@@ -3,24 +3,36 @@
 {% block content %}
 
     {% if user.is_authenticated %}
-
         <div class="col-md-6 offset-md-3">
-        <h1>Add Employee</h1>
+            <h1>Add Employee</h1>
+            <form method="POST" action="{% url 'add_employee' %}">
+                <br/>
+                {% csrf_token %}
+                
+                {{ form.non_field_errors }}
+                {% for field in form %}
+                    <div class="form-group">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
 
-        <form method="POST" action="{% url 'add_employee' %}">
-            <br/>
-            {% csrf_token %}
+                <br>
 
-            {{form.as_p}}
-
-            <button type="submit" class="btn btn-secondary">Submit</button>
+                <button type="submit" class="btn btn-secondary">Submit</button>
+            </form>
+        </div>
 
     {% else %}
+        <div class="alert alert-warning" role="alert">
+            You need to be logged in to access this page. Redirecting to the login page...
+        </div>
         <script>
-            window.location.href = "{% url 'login_user' %}";
+            setTimeout(function() {
+                window.location.href = "{% url 'login_user' %}";
+            }, 2000);  <!-- Adjust timeout as needed -->
         </script>
     {% endif %}
-
-
 
 {% endblock %}

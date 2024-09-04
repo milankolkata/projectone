@@ -4,17 +4,16 @@ from django.contrib.auth.models import User
 import pytz
 
 class Employee(models.Model):
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    user_name = models.CharField(max_length=50, default='default_user_name')
-    email = models.EmailField(unique=True)  # Assuming you want emails to be unique
-    team_code = models.AutoField(primary_key=True)
-    phone_number = models.CharField(max_length=15, blank=True, null=True)
-    date_of_birth = models.DateField(blank=True, null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    phone_number = models.CharField(max_length=15)
+    address = models.TextField(default='Kolkata')
+    date_of_birth = models.DateField()
     position = models.CharField(max_length=100)
-    salary = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    skills = models.CharField(max_length=500)
-    advances = models.IntegerField(default=0)
+    salary = models.IntegerField()
+    skills = models.TextField()
+    advances = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -44,16 +43,14 @@ class Attendance(models.Model):
 
 
 
-
 class Individual_Attendance(models.Model):
     STATUS_CHOICES = [
         ('present', 'Present'),
         ('absent', 'Absent'),
     ]
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     date = models.DateField()
     time = models.TimeField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Check')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='present')
 
     def __str__(self):
         return f"{self.employee.user_name} - {self.status} on {self.date} at {self.time}"

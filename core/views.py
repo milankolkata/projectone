@@ -15,6 +15,7 @@ from io import BytesIO
 from django.core.files.base import ContentFile
 from django.conf import settings
 from django.core.files.storage import default_storage
+from django.utils import timezone
 
 
 
@@ -156,11 +157,16 @@ def select_employee(request):
 
 
 
-from django.utils import timezone
+
 
 def user_attendance(request):
     current_time = timezone.now()
-    user_instance = Employee.objects.get(user_name=request.user)
+    
+    try:
+        user_instance = Employee.objects.get(user_name=request.user.username)
+    except ObjectDoesNotExist:
+        messages.error(request, "Employee record not found.")
+        return redirect('some_error_page')  # Redirect to an error page or handle it as needed
 
     if request.method == 'POST':
         status = request.POST.get('status')
@@ -275,7 +281,7 @@ def today_late(request):
 def dynamic_qr(request):
     random_number = '290901'
     today_date = datetime.now().strftime('%d%m%y')
-    domain = 'milansoft.co.in'
+    domain = 'milankolkata.com'
     data = f"https://{domain}/{random_number}{today_date}"
 
     # Create a QR code object

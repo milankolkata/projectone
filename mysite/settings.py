@@ -67,11 +67,17 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'new_db',
+        'USER': 'doadmin',
+        'PASSWORD': 'AVNS_F-4UQ-foQL1yMsuC_ZG',  # Replace with your actual password
+        'HOST': 'dbaas-db-6162201-do-user-17564854-0.i.db.ondigitalocean.com',
+        'PORT': '25060',
+        'OPTIONS': {
+            'sslmode': 'require',
+        },
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

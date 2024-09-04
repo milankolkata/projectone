@@ -69,12 +69,15 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'projectone',
-        'USER': 'projectoneuser',
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': 'localhost',
-        'PORT': ''
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'new_db',
+        'USER': 'doadmin',
+        'PASSWORD': 'AVNS_F-4UQ-foQL1yMsuC_ZG',  # Replace with your actual password
+        'HOST': 'dbaas-db-6162201-do-user-17564854-0.i.db.ondigitalocean.com',
+        'PORT': '25060',
+        'OPTIONS': {
+            'sslmode': 'require',
+        },
     }
 }
 
