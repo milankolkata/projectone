@@ -4,6 +4,10 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 load_dotenv()
+import environ
+
+env = environ.Env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -70,9 +74,9 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'new_db',
-        'USER': 'doadmin',
-        'PASSWORD': 'AVNS_F-4UQ-foQL1yMsuC_ZG',  # Replace with your actual password
+        'NAME': 'defaultdb',
+        'USER': os.getenv('DB_USER1'),
+        'PASSWORD': os.getenv('DB_PASSWORD1'),
         'HOST': 'dbaas-db-6162201-do-user-17564854-0.i.db.ondigitalocean.com',
         'PORT': '25060',
         'OPTIONS': {
