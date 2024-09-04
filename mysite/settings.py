@@ -64,11 +64,14 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'milan_employee_attendance_db',
+        'USER': 'milan_employee_attendance_db_user',
+        'PASSWORD': 'W44rY8ZJdXlSkfG2RIi4XvOZ5KDWQ2ra',
+        'HOST': 'dpg-crcc613qf0us738j1tp0-a.oregon-postgres.render.com',  # Use only the hostname part
+        'PORT': '5432',
     }
 }
 
