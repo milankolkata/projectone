@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if user.is_authenticated %}
+
+    <script>
+        window.location.href = "{% url 'home' %}";
+    </script>
+
+
+{% else %}
+
+
+    <div class="col-md-6 offset-md-3"></div>
+    <h1> L O G  -      I N</h1>
+
+
+    <form method ="POST" action="{% url 'login_user' %}">
+        <br/>
+        {% csrf_token %}
+        <form>
+            <div class="mb-3">
+            <label for="exampleInputEmail1" class="form-label">User ID</label>
+            <input type="text" class="form-control" name = 'username', placeholder="User ID" required>
+            </div>
+            <div class="mb-3">
+            <label for="exampleInputPassword1" class="form-label">Password</label>
+            <input type="password" class="form-control" name = 'Password', placeholder="Password" required>
+            </div>
+            <br/>
+            <button type="submit" class="btn btn-secondary">Submit</button>
+
+{% endif %}
+
+{% endblock %}

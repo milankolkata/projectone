@@ -9,12 +9,11 @@
         <select class="form-control" id="id_employee" name="employee">
             <option value="" disabled selected>Choose an employee</option>
             {% for employee in employees %}
-                <!-- Use employee.id for the value -->
-                <option value="{{ employee.id }}">{{ employee.first_name }} ({{ employee.id }})</option>
+                <option value="{{ employee.team_code }}">{{ employee.first_name }} ({{ employee.team_code }})</option>
             {% endfor %}
         </select>
     </div>
-    </br>
+</br>
     <div class="form-group">
         <label for="attendance">Attendance Status</label><br>
         <div class="form-check">
@@ -26,7 +25,7 @@
             <label class="form-check-label" for="absent">Absent</label>
         </div>
     </div>
-    </br>
+</br>
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
 {% endblock %}

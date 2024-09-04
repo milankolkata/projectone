@@ -28,7 +28,7 @@
             {% for attend in today_late %}
                 <tr>
                 
-                    <th scope="row">{{attend.employee.team_code}}</th>
+                    <th scope="row">{{attend.employee.id}}</th>
                     <td>{{ attend.employee.first_name }} {{ attend.employee.last_name }}</td>
                     <td>{{attend.employee.position}}</td>
                     <td>{{attend.time}}</td>

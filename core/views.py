@@ -6,10 +6,9 @@ from django.contrib import messages
 from django.utils import timezone
 from datetime import date, time
 from django.core.exceptions import ValidationError
-from .decorators import  allowed_users
+from .decorators import allowed_users
 from django.contrib import messages
-from datetime import date
-from datetime import datetime
+from datetime import date, datetime
 import qrcode
 from io import BytesIO
 from django.core.files.base import ContentFile
@@ -17,9 +16,7 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.utils import timezone
 
-
-
-# atteandamce
+# Employee Selection Form
 class EmployeeSelectionForm(forms.Form):
     employee = forms.ModelChoiceField(
         queryset=Employee.objects.all(),
@@ -33,6 +30,7 @@ class EmployeeSelectionForm(forms.Form):
         label="Attendance Status"
     )
 
+# Add Employee View
 def add_employee(request):
     form = EmployeeForm(request.POST or None)
     if request.user.is_authenticated:
@@ -41,132 +39,101 @@ def add_employee(request):
                 add_employee = form.save()
                 messages.success(request, "Record added")
                 return redirect('home')
-        return render(request, 'add_employee.html', {"form":form})
+        return render(request, 'add_employee.html', {"form": form})
     else:
         return redirect('login_user')
 
-
-
-
+# Admin Placeholder
 def adminn(request):
     return HttpResponse("hi")
 
-
-
+# Login User View
 def login_user(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['Password']
         user = authenticate(request, username=username, password=password)
-        print(user)
         if user is not None:
             user_groups = user.groups.all()  # Access the authenticated user's groups
             for group in user_groups:
                 if group.name == 'employees':
                     login(request, user)
-                    messages.success(request, 'LogIn Successful')
+                    messages.success(request, 'Login Successful')
                     return redirect('user_attendance')
             else:
                 login(request, user)
-                messages.success(request, 'LogIn Successful')
+                messages.success(request, 'Login Successful')
                 return redirect('home')
         else:
             messages.error(request, 'Error in Login, Please Try Again')
             return render(request, 'login.html')
     else:
         return render(request, 'login.html')
- 
 
-
-
+# Logout User View
 def logout_user(request):
     logout(request)
     messages.success(request, 'Logout Successful')
     return redirect('login_user')
 
-
-@allowed_users(allowed_roles=['admin'])
 def employee_details(request):
     employees = Employee.objects.all()
-    return render(request,'employee_details.html', {'employees':employees})
+    return render(request, 'employee_details.html', {'employees': employees})
 
+# Individual Employee Details
 def individual_employee_details(request, pk):
     if request.user.is_authenticated:
-        employee = Employee.objects.get(team_code=pk)
-        return render(request, 'individual_employee_details.html' , {'employee':employee})
+        # Use `pk` to filter by employee's primary key (id)
+        employee = get_object_or_404(Employee, id=pk)
+        return render(request, 'individual_employee_details.html', {'employee': employee})
     else:
         messages.success(request, 'Please Login to view individual Record')
         return redirect('login_user')
 
-
-@allowed_users(allowed_roles=['admin', 'employees'])
 def select_employee(request):
     employees = Employee.objects.all()
-    
+
     if request.method == "POST":
         form = EmployeeSelectionForm(request.POST)
+
         if form.is_valid():
             employee = form.cleaned_data['employee']
             attendance_status = form.cleaned_data['attendance_status']
             today = date.today()
 
-            # Query attendance for the current day
-            attendance_for_day = Attendance.objects.filter(date=today)
-
-            # Get the teamcode from POST data and strip any whitespace
-            teamcode = str(request.POST.get('employee')).strip()  # Convert to string before stripping
-            print(f"Teamcode from POST: {teamcode}")  # Debugging
+            # Query attendance for the specific employee for the current day
+            attendance_for_day = Attendance.objects.filter(employee=employee, date=today).first()
 
             if attendance_for_day:
-                for attendance in attendance_for_day:
-                    # print(attendance)  # Debugging
-                    attendance_history_team_code = str(attendance.employee.team_code).strip()  # Convert to string before stripping
-                    print(f"Attendance History Team Code: {attendance_history_team_code}")  # Debugging
-
-                    if attendance_history_team_code == teamcode:
-                        messages.add_message(request, messages.WARNING, f"Attendance for {employee} has already been marked")
-                        break
-                else:  # This else corresponds to the for loop, executes if no break occurred
-                    new_attendance = Attendance(
-                        employee=employee,
-                        status=attendance_status,
-                        date=today
-                    )
-                    new_attendance.save()
-                    messages.success(request, f"Attendance recorded successfully for {employee}")
-                    return redirect('select_employee')  # Replace with your actual success URL or view name
+                # If attendance exists for today
+                messages.warning(request, f"Attendance for {employee} has already been marked")
             else:
-                # No attendance records for the day, so we can add the first record
+                # Create new attendance record
                 new_attendance = Attendance(
                     employee=employee,
                     status=attendance_status,
                     date=today
                 )
                 new_attendance.save()
-                messages.success(request, 'Congratulations, You are the first to enter today')
-                return redirect('select_employee')
+                messages.success(request, f"Attendance recorded successfully for {employee}")
+            
+            return redirect('select_employee')
         else:
-            print(form.errors)  # Debugging: Print form errors
+            print(form.errors)
     else:
         form = EmployeeSelectionForm()
-    
+
     return render(request, 'record_attendance.html', {'form': form, 'employees': employees})
 
-
-
-
-
-
-
-
+# User Attendance View
 def user_attendance(request):
     current_time = timezone.now()
-    
-    try:
-        user_instance = Employee.objects.get(user_name=request.user.username)
-    except ObjectDoesNotExist:
-        messages.error(request, "Employee record not found.")
-        return redirect('some_error_page')  # Redirect to an error page or handle it as needed
+
+
+    user_instance = Employee.objects.get(user_name__iexact=request.user.username)
+    # except ObjectDoesNotExist:
+    #     messages.error(request, "Employee record not found.")
+    #     return redirect('some_error_page')  # Redirect to an error page or handle it as needed
 
     if request.method == 'POST':
         status = request.POST.get('status')
@@ -195,49 +162,36 @@ def user_attendance(request):
 
     return render(request, 'user_attendance.html', context)
 
-
-
-
-
-
-
-
-
-
-
-
+# Attendance Helper Functions
 def get_today_attendance():
     today = date.today()
     return Attendance.objects.filter(date=today)
 
-# Function to get absent employees
 def absent_today():
     attendance_records = get_today_attendance()
+    print(attendance_records)
+    print('hi')
     absent_employees = attendance_records.filter(status='absent')
-    print(absent_employees)
     return absent_employees
 
-# Function to get present employees
 def present_today():
     attendance_records = get_today_attendance()
     present_employees = attendance_records.filter(status='present')
     return present_employees
 
-# Function to get late employees
 def late_today():
     late_time_threshold = time(11, 30)
     attendance_records = get_today_attendance().filter(status='present')
     late_employees = attendance_records.filter(time__gt=late_time_threshold)
     return late_employees
 
-# Function to get on-time employees
 def on_time_today():
     late_time_threshold = time(11, 30)
     attendance_records = get_today_attendance().filter(status='present')
     on_time_employees = attendance_records.filter(time__lte=late_time_threshold)
     return on_time_employees
 
-
+# Home View
 def home(request):
     attendance_data = get_today_attendance()
     absent_employees = absent_today()
@@ -256,28 +210,7 @@ def home(request):
         }
     )
 
-
-
-def today_present(request):
-    present_employees = present_today()
-    employees = Employee.objects.all()
-    return render(request, 'today_present.html', {'today_present':present_employees, 'employees':employees})
-
-def today_absent(request):
-    absent_employees = absent_today()
-    return render(request, 'today_absent.html', {'today_absent':absent_employees})
-
-def today_on_time(request):
-    on_time_employees = on_time_today()
-    return render(request, 'today_on_time.html', {'today_on_time':on_time_employees})
-
-def today_late(request):
-    late_employees = late_today()
-    return render(request, 'today_late.html', {'today_late':late_employees})
-
-
-
-
+# QR Code Generation
 def dynamic_qr(request):
     random_number = '290901'
     today_date = datetime.now().strftime('%d%m%y')
@@ -307,7 +240,24 @@ def dynamic_qr(request):
     file_name = f'qrcode_{domain}_{today_date}.png'
     file_path = default_storage.save(f'qr_codes/{file_name}', ContentFile(img_io.getvalue()))
 
-    # Ensure you pass the correct relative file path
     file_url = f"{settings.MEDIA_URL}qr_codes/{file_name}"
 
     return render(request, 'attendance_qr.html', {'file_path': file_url})
+
+# Attendance Views
+def today_present(request):
+    present_employees = present_today()
+    employees = Employee.objects.all()
+    return render(request, 'today_present.html', {'today_present': present_employees, 'employees': employees})
+
+def today_absent(request):
+    absent_employees = absent_today()
+    return render(request, 'today_absent.html', {'today_absent': absent_employees})
+
+def today_on_time(request):
+    on_time_employees = on_time_today()
+    return render(request, 'today_on_time.html', {'today_on_time': on_time_employees})
+
+def today_late(request):
+    late_employees = late_today()
+    return render(request, 'today_late.html', {'today_late': late_employees})

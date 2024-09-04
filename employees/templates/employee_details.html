@@ -26,11 +26,11 @@
             {% for employee in employees %}
                 <tr>
                 
-                    <th scope="row">{{employee.id}}</th>
+                    <th scope="row">{{employee.team_code}}</th>
                     <td>{{employee.first_name}} {{employee.last_name}}</td>
                     <td>{{employee.position}}</td>
                     <td>{{employee.phone_number}}</td>  
-                    <td><a href="{% url 'individual_employee_details' employee.id %}">View</a></td> 
+                    <td><a href="{% url 'individual_employee_details' employee.team_code %}">View</a></td> 
 
                 </tr>                 
             {% endfor %}
