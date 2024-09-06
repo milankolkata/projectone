@@ -2,61 +2,46 @@
 
 {% block content %}
 
-
-<div class="card" style="width: 18rem;">
-    <div class="card-header">
-       <strong> {{employee.first_name}} {{employee.last_name}} </strong>
+<div class="container mt-4">
+    <div class="card mx-auto shadow-sm" style="max-width: 24rem;">
+        <div class="card-header bg-dark text-white text-center">
+            <strong>{{ employee.first_name }} {{ employee.last_name }}</strong>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+                <strong>Unique ID: </strong>{{ employee.id }}
+            </li>
+            <li class="list-group-item">
+                <strong>Email: </strong>{{ employee.email }}
+            </li>
+            <li class="list-group-item">
+                <strong>Phone Number: </strong>{{ employee.phone_number }}
+            </li>
+            <li class="list-group-item">
+                <strong>Date of Birth: </strong>{{ employee.date_of_birth }}
+            </li>
+            <li class="list-group-item">
+                <strong>Position: </strong>{{ employee.position }}
+            </li>
+            <li class="list-group-item">
+                <strong>Salary: </strong>{{ employee.salary }}
+            </li>
+            <li class="list-group-item">
+                <strong>Skill-Set: </strong>{{ employee.skills }}
+            </li>
+            <li class="list-group-item">
+                <strong>Qualifications: </strong>{{ employee.qualifications }}
+            </li>
+            <li class="list-group-item">
+                <strong>Advance: </strong>{{ employee.advance }}
+            </li>
+        </ul>
     </div>
-    <ul class="list-group list-group-flush">
 
-        <li class="list-group-item">
-        <strong>Unique ID: </strong> {{employee.id}}
-        </li>
-    
-
-      <li class="list-group-item">
-        <strong>Email: </strong> {{employee.email}}
-      </li>
-
-      <li class="list-group-item">
-        <strong>Phone Number: </strong> {{employee.phone_number}}
-      </li>
-
-      <li class="list-group-item">
-        <strong>Date of Birth: </strong> {{employee.date_of_birth}}
-      </li>
-
-      <li class="list-group-item">
-        <strong>Position: </strong> {{employee.position}}
-      </li>
-
-      <li class="list-group-item">
-        <strong>Salary: </strong> {{employee.salary}}
-      </li>
-
-
-      <li class="list-group-item">
-        <strong>Skill-Set: </strong> {{employee.skills}}
-      </li>
-
-      <li class="list-group-item">
-        <strong>Qualifications:</strong> {{employee.skills}}
-      </li>
-
-
-      <li class="list-group-item">
-        <strong>Advance:</strong> {{employee.skills}}
-      </li>
-
-
-    </ul>
-  </div>
-
-</br>
-<a href="{% url 'employee_details' %}" class="btn btn-secondary" >Back</a>
-<a href="{% url 'employee_details' %}" class="btn btn-danger" >Delete</a>
-  
-
-
+    <div class="text-center mt-4">
+        <a href="{% url 'employee_details' %}" class="btn btn-outline-dark mr-2">Back</a>
+        <a href="{% url 'employee_details' %}" class="btn btn-outline-danger">Delete</a>
+    </div>
+</div>
 
 {% endblock %}

@@ -1,37 +1,42 @@
 {% if user.is_authenticated %}
 
-
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
+    <!-- Brand -->
     <a class="navbar-brand mb-0 h1 text-white" href="{% url 'home' %}">Milan HR</a>
-    
+
+    <!-- Toggler for Mobile View -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
+    <!-- Navbar Links -->
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-
+        
+        <!-- Home Link -->
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'home' %}">Home</Details></a>
+          <a class="nav-link text-white" href="{% url 'home' %}">Home</a>
         </li>
 
-        <!-- Dashboard Link -->
+        <!-- Employee Details Link -->
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'employee_details' %}">Employee Details</Details></a>
+          <a class="nav-link text-white" href="{% url 'employee_details' %}">Employee Details</a>
         </li>
+
         <!-- Attendance Link -->
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'select_employee' %}">Attendance</a>
+          <a class="nav-link text-white" href="{% url 'attendance_qr' %}">Attendance QR</a>
         </li>
-        <!-- Employee Management Link -->
+
+        <!-- Add Employee Link -->
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'add_employee' %}">Add Employee</a>
+          <a class="nav-link text-white" href="{% url 'add_employee' %}">Add Employee</a>
         </li>
-        <!-- Reports Link -->
-        <!-- Logout -->
+
+        <!-- Logout Link -->
         <li class="nav-item">
-          <a class="nav-link d-flex flex-column align-items-center" href="{% url 'logout' %}">
+          <a class="nav-link d-flex flex-column align-items-center text-white" href="{% url 'logout' %}">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-toggle-on" viewBox="0 0 16 16">
               <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>
             </svg>
@@ -43,14 +48,13 @@
   </div>
 </nav>
 
-
 {% else %}
 
-
-
-<nav class="navbar bg-black">
+<!-- Navbar for Non-Authenticated Users -->
+<nav class="navbar bg-dark">
   <div class="container-fluid d-flex justify-content-center">
     <span class="navbar-brand mb-0 h1 text-white">Milan HR</span>
   </div>
 </nav>
+
 {% endif %}

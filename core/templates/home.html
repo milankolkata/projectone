@@ -3,106 +3,81 @@
 {% block content %}
 
 {% if user.is_authenticated %}
-
-
-
-    <div class="container text-center">
-        <div class="row">
-            <!-- First Column -->
-            <div class="col-md-3">
-                <div class="card border-success mb-3" style="max-width: 18rem;">
-                    <div class="card-header">Present Today</div>
-                    {% if present_today %}
-                        <div class="card-body">
-                            <!-- <h2 class="card-title">Employees Present Today</h2> -->
-                            <p class="display-4 text-primary font-weight-bold">{{ present_today|length }}</p>
-                        </div>
-                        {% if present_today|length >=  1 %}
-                            <a href="{% url 'today_present' %}" class="btn btn-secondary mt-3">View All</a>
-                        {% endif %}
-                    {% else %}
-                        <div class="card-body">
+    <div class="container text-center mt-4">
+        <div class="row justify-content-center">
+            <!-- First Column: Present Today -->
+            <div class="col-sm-6 col-md-3 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-dark text-white">Present Today</div>
+                    <div class="card-body">
+                        {% if present_today %}
+                            <p class="display-4 text-success font-weight-bold">{{ present_today|length }}</p>
+                            {% if present_today|length >= 1 %}
+                                <a href="{% url 'today_present' %}" class="btn btn-outline-dark btn-block mt-3">View All</a>
+                            {% endif %}
+                        {% else %}
                             <p>No employees present today.</p>
-                        </div>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
-            <!-- Second Column -->
-            <div class="col-md-3">
-                <div class="card border-danger mb-3" style="max-width: 18rem;">
-                    <div class="card-header">Absent Today</div>
-                    {% if present_today %}
-                        <div class="card-body">
-                            <!-- <h2 class="card-title">Absent Today</h2> -->
-                            <p class="display-4 text-primary font-weight-bold">{{ absent_today|length }}</p>
-                        </div>
-                        {% if present_today|length >= 1 %}
-                            <a href="{% url 'today_absent' %}" class="btn btn-secondary mt-3">View All</a>
-                        {% endif %}
-                    {% else %}
-                        <div class="card-body">
+            <!-- Second Column: Absent Today -->
+            <div class="col-sm-6 col-md-3 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-dark text-white">Absent Today</div>
+                    <div class="card-body">
+                        {% if absent_today %}
+                            <p class="display-4 text-danger font-weight-bold">{{ absent_today|length }}</p>
+                            {% if absent_today|length >= 1 %}
+                                <a href="{% url 'today_absent' %}" class="btn btn-outline-dark btn-block mt-3">View All</a>
+                            {% endif %}
+                        {% else %}
                             <p>No employees absent today.</p>
-                        </div>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
-            <!-- Third Column -->
-            <div class="col-md-3">
-                <div class="card border-success mb-3" style="max-width: 18rem;">
-                    <div class="card-header">On Time Today</div>
-                    {% if present_today %}
-                        <div class="card-body">
-                            <!-- <h2 class="card-title">Employees On Time Today</h2> -->
-                            <p class="display-4 text-primary font-weight-bold">{{ on_time_today|length }}</p>
-                        </div>
-                        {% if present_today|length >= 1 %}
-                            <a href="{% url 'today_on_time' %}" class="btn btn-secondary mt-3">View All</a>
-                        {% endif %}
-                    {% else %}
-                        <div class="card-body">
+            <!-- Third Column: On Time Today -->
+            <div class="col-sm-6 col-md-3 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-dark text-white">On Time Today</div>
+                    <div class="card-body">
+                        {% if on_time_today %}
+                            <p class="display-4 text-success font-weight-bold">{{ on_time_today|length }}</p>
+                            {% if on_time_today|length >= 1 %}
+                                <a href="{% url 'today_on_time' %}" class="btn btn-outline-dark btn-block mt-3">View All</a>
+                            {% endif %}
+                        {% else %}
                             <p>No employees on time today.</p>
-                        </div>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
-            <!-- Fourth Column -->
-            <div class="col-md-3">
-                <div class="card border-danger mb-3" style="max-width: 18rem;">
-                    <div class="card-header">Late Today</div>
-                    {% if present_today %}
-                        <div class="card-body">
-                            <!-- <h2 class="card-title">Employees Late Today</h2> -->
-                            <p class="display-4 text-primary font-weight-bold">{{ late_today|length }}</p>
-                        </div>
-                        {% if present_today|length >= 1 %}
-                            <a href="{% url 'today_late' %}" class="btn btn-secondary mt-3">View All</a>
-                        {% endif %}
-                    {% else %}
-                        <div class="card-body">
+            <!-- Fourth Column: Late Today -->
+            <div class="col-sm-6 col-md-3 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-dark text-white">Late Today</div>
+                    <div class="card-body">
+                        {% if late_today %}
+                            <p class="display-4 text-danger font-weight-bold">{{ late_today|length }}</p>
+                            {% if late_today|length >= 1 %}
+                                <a href="{% url 'today_late' %}" class="btn btn-outline-dark btn-block mt-3">View All</a>
+                            {% endif %}
+                        {% else %}
                             <p>No employees late today.</p>
-                        </div>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-
-
-
-
-
-
-
 {% else %}
     <script>
         window.location.href = "{% url 'login_user' %}";
     </script>
 {% endif %}
-
-
 
 {% endblock %}

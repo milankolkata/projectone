@@ -1,44 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Code</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
             margin: 0;
+            font-family: Arial, sans-serif;
             background-color: #f4f4f4;
         }
 
-        h1 {
+        header {
+            background-color: #000;
+            color: #fff;
+            padding: 20px 0;
             text-align: center;
-            font-size: 2rem;
-            color: #333;
-            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
         }
 
         .qr-container {
             background-color: #fff;
-            padding: 20px;
+            padding: 40px;
             border-radius: 10px;
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
 
         .qr-container img {
-            width: 200px;
-            height: 200px;
+            width: 100%;
+            max-width: 200px;
+            height: auto;
             border-radius: 10px;
             border: 2px solid #ddd;
         }
+
+        .note {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        .datetime {
+            font-size: 1rem;
+            color: #333;
+            margin-top: 5px;
+        }
+
     </style>
+    <script>
+        function updateTime() {
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            };
+            const now = new Date().toLocaleDateString('en-US', options);
+            document.getElementById('current-time').innerHTML = now;
+        }
+
+        setInterval(updateTime, 60000);  // Update time every minute
+    </script>
 </head>
 <body>
+
+<header>
+    MILAN HR
+</header>
+
+<div class="wrapper">
     <div class="qr-container">
         <h1>Scan QR to Mark Attendance</h1>
         <img src="{{ file_path }}" alt="QR Code">
+        <p class="note">Please note that this QR code changes daily.</p>
+        <p class="datetime" id="current-time">
+            Current Date and Time: 
+        </p>
     </div>
+</div>
+
+<script>
+    // Initialize the current time display when the page loads
+    updateTime();
+</script>
+
 </body>
+</html>

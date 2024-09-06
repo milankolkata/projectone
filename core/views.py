@@ -125,42 +125,56 @@ def select_employee(request):
 
     return render(request, 'record_attendance.html', {'form': form, 'employees': employees})
 
+
+
 # User Attendance View
-def user_attendance(request):
+def user_attendance(request, date):
     current_time = timezone.now()
+    user_name = request.user.username
+    print(user_name)
 
+    # Convert the date from URL to a datetime object
+    try:
+        date_from_url = datetime.strptime(date, '%d%m%y').date()  # Assuming date in 'ddmmyy' format
+    except ValueError:
+        messages.error(request, "Invalid date format.")
+        return render(request, 'user_attendance.html', {})
 
-    user_instance = Employee.objects.get(user_name__iexact=request.user.username)
-    # except ObjectDoesNotExist:
-    #     messages.error(request, "Employee record not found.")
-    #     return redirect('some_error_page')  # Redirect to an error page or handle it as needed
+    # Get the current user's Employee instance
+    try:
+        user_instance = Employee.objects.get(user_name=user_name)
+    except Employee.DoesNotExist:
+        messages.error(request, "Employee not found.")
+        return render(request, 'user_attendance.html', {})
 
     if request.method == 'POST':
         status = request.POST.get('status')
-        today_date = current_time.strftime('%d-%m-%Y')
-        formatted_time = current_time.strftime('%H:%M:%S')
 
-        attendance_exists = Attendance.objects.filter(employee=user_instance, date=current_time.date()).exists()
+        # Check if attendance has already been marked for the given date
+        attendance_exists = Attendance.objects.filter(employee=user_instance, date=date_from_url).exists()
 
         if attendance_exists:
-            messages.warning(request, f"Attendance for {request.user.username} has already been marked for today.")
+            messages.warning(request, f"Attendance for {request.user.username} has already been marked for {date_from_url}.")
         else:
+            # Use timezone-aware time and save attendance for the given date
             Attendance.objects.create(
                 employee=user_instance,
                 status=status,
-                date=current_time.date(),
-                time=current_time.time()
+                date=date_from_url,
+                time=current_time,  # Save the full timezone-aware datetime here
             )
-            messages.success(request, f"Attendance recorded successfully for {request.user.username} on {today_date} at {formatted_time}.")
-
-        return redirect('user_attendance')
+            formatted_time = current_time.strftime('%H:%M:%S')
+            messages.success(request, f"Attendance recorded successfully for {request.user.username} on {date_from_url} at {formatted_time}.")
+        return render(request, 'user_attendance.html', {})
 
     context = {
         'current_date': current_time.date(),
         'current_time': current_time.strftime('%H:%M:%S'),
+        'date_from_url': date_from_url,
     }
 
     return render(request, 'user_attendance.html', context)
+
 
 # Attendance Helper Functions
 def get_today_attendance():
@@ -169,8 +183,6 @@ def get_today_attendance():
 
 def absent_today():
     attendance_records = get_today_attendance()
-    print(attendance_records)
-    print('hi')
     absent_employees = attendance_records.filter(status='absent')
     return absent_employees
 
@@ -179,17 +191,23 @@ def present_today():
     present_employees = attendance_records.filter(status='present')
     return present_employees
 
+
+
 def late_today():
     late_time_threshold = time(11, 30)
     attendance_records = get_today_attendance().filter(status='present')
     late_employees = attendance_records.filter(time__gt=late_time_threshold)
     return late_employees
 
+
 def on_time_today():
     late_time_threshold = time(11, 30)
     attendance_records = get_today_attendance().filter(status='present')
     on_time_employees = attendance_records.filter(time__lte=late_time_threshold)
+    print(on_time_employees)
     return on_time_employees
+
+
 
 # Home View
 def home(request):
@@ -211,38 +229,57 @@ def home(request):
     )
 
 # QR Code Generation
+def today_date_func():
+    today_date = datetime.now().strftime('%d%m%y')
+    return today_date
+
+
 def dynamic_qr(request):
     random_number = '290901'
-    today_date = datetime.now().strftime('%d%m%y')
+    todays_date = today_date_func()  # Assuming this function returns the date in 'ddmmyy' format
     domain = 'milankolkata.com'
-    data = f"https://{domain}/{random_number}{today_date}"
+    data = f"https://{domain}/user{random_number}{todays_date}"
 
-    # Create a QR code object
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
+    # Define file name and path
+    file_name = f'qrcode_{domain}_{todays_date}.png'
+    file_path = f'qr_codes/{file_name}'
+    
+    # Check if QR code already exists for today
+    if not default_storage.exists(file_path):
+        # Create a QR code object
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
 
-    # Add data to the QR code
-    qr.add_data(data)
-    qr.make(fit=True)
+        # Add data to the QR code
+        qr.add_data(data)
+        qr.make(fit=True)
 
-    # Create an image from the QR code
-    img = qr.make_image(fill='black', back_color='white')
+        # Create an image from the QR code
+        img = qr.make_image(fill='black', back_color='white')
 
-    # Save the image to a BytesIO object
-    img_io = BytesIO()
-    img.save(img_io, 'PNG')
-    img_io.seek(0)
+        # Save the image to a BytesIO object
+        img_io = BytesIO()
+        img.save(img_io, 'PNG')
+        img_io.seek(0)
 
-    file_name = f'qrcode_{domain}_{today_date}.png'
-    file_path = default_storage.save(f'qr_codes/{file_name}', ContentFile(img_io.getvalue()))
+        # Save the file to the storage only if it doesn't exist
+        default_storage.save(file_path, ContentFile(img_io.getvalue()))
 
+    # Generate the file URL
     file_url = f"{settings.MEDIA_URL}qr_codes/{file_name}"
 
-    return render(request, 'attendance_qr.html', {'file_path': file_url})
+    # Get current date, time, and day
+    current_date_time = timezone.now().strftime('%A, %d %B %Y, %H:%M:%S')
+
+    # Pass the file URL and the current date and time to the template
+    return render(request, 'attendance_qr.html', {
+        'file_path': file_url,
+        'current_date_time': current_date_time,
+    })
 
 # Attendance Views
 def today_present(request):
@@ -256,6 +293,7 @@ def today_absent(request):
 
 def today_on_time(request):
     on_time_employees = on_time_today()
+    print(on_time_employees)
     return render(request, 'today_on_time.html', {'today_on_time': on_time_employees})
 
 def today_late(request):

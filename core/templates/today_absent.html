@@ -4,61 +4,47 @@
 
     {% if user.is_authenticated %}
         
-    <br>
-    <h1>Absent Today</h1>
-    <br>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Absent Today</h1>
 
-    <table class="table table-hover">
-        <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Name</th>
-                <!-- <th scope="col">Email</th>
-
-                <th scope="col">date_of_birth</th> -->
-                <th scope="col">Position</th>
-                <!-- <th scope="col">Last</th>
-                <th scope="col">salary</th> -->
-                <th scope="col">Entry Time</th>
-                <th scope="col">Skill Set</th>
-                <th scope="col">Attendance History</th>
-            </tr>
-        </thead>
-    <tbody>
-        {% if today_absent %}
-            {% for attend in today_absent %}
-                <tr>
-                
-                    <th scope="row">{{attend.employee.id}}</th>
-                    <td>{{ attend.employee.first_name }} {{ attend.employee.last_name }}</td>
-                    <td>{{attend.employee.position}}</td>
-                    <td>{{attend.time}}</td>
-                    <td>{{attend.employee.skills}}</td>
-
-                    <td><a href="{% url 'today_absent' %}">-- View --</a></td> 
-
-                </tr>                 
-            {% endfor %}
-        {% endif %}
-
-        </tbody>
-    </table>
-
-
-
-
-
-
-
-
-
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered text-center">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Position</th>
+                        <th scope="col">Entry Time</th>
+                        <th scope="col">Skill Set</th>
+                        <th scope="col">Attendance History</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if today_absent %}
+                        {% for attend in today_absent %}
+                            <tr>
+                                <th scope="row">{{ attend.employee.id }}</th>
+                                <td>{{ attend.employee.first_name }} {{ attend.employee.last_name }}</td>
+                                <td>{{ attend.employee.position }}</td>
+                                <td>{{ attend.time }}</td>
+                                <td>{{ attend.employee.skills }}</td>
+                                <td><a href="{% url 'today_absent' %}" class="btn btn-outline-dark btn-sm">View</a></td>
+                            </tr>                 
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">No absent employees today.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     {% else %}
         <script>
             window.location.href = "{% url 'login_user' %}";
         </script>
     {% endif %}
-
-
 
 {% endblock %}

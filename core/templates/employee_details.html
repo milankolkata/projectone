@@ -3,53 +3,46 @@
 {% block content %}
 
 {% if user.is_authenticated %}
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Employees Data</h1>
 
-    <h1>Employees Data</h1>
-
-    <table class="table table-hover">
-        <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Name</th>
-                <!-- <th scope="col">Email</th>
-
-                <th scope="col">date_of_birth</th> -->
-                <th scope="col">Position</th>
-                <!-- <th scope="col">Last</th>
-                <th scope="col">salary</th> -->
-                <th scope="col">Phone Number</th>
-                <th scope="col">View Detials</th>
-            </tr>
-        </thead>
-    <tbody>
-        {% if employees %}
-            {% for employee in employees %}
-                <tr>
-                
-                    <th scope="row">{{employee.id}}</th>
-                    <td>{{employee.first_name}} {{employee.last_name}}</td>
-                    <td>{{employee.position}}</td>
-                    <td>{{employee.phone_number}}</td>  
-                    <td><a href="{% url 'individual_employee_details' employee.id %}">View</a></td> 
-
-                </tr>                 
-            {% endfor %}
-        {% endif %}
-
-
-            </tr>
-        </tbody>
-    </table>
-
-
-
-
-
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered text-center">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Position</th>
+                        <th scope="col">Phone Number</th>
+                        <th scope="col">Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if employees %}
+                        {% for employee in employees %}
+                            <tr>
+                                <th scope="row">{{ employee.id }}</th>
+                                <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+                                <td>{{ employee.position }}</td>
+                                <td>{{ employee.phone_number }}</td>
+                                <td>
+                                    <a href="{% url 'individual_employee_details' employee.id %}" class="btn btn-outline-dark btn-sm">View</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">No employees found</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% else %}
     <script>
         window.location.href = "{% url 'login' %}";
     </script>
 {% endif %}
-
 
 {% endblock %}

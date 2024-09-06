@@ -5,6 +5,7 @@ import pytz
 
 class Employee(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    user_name = models.CharField(max_length=25, default='default_user_name')
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=15)
@@ -24,13 +25,12 @@ class Employee(models.Model):
 class Attendance(models.Model):
     STATUS_CHOICES = [
         ('present', 'Present'),
-        ('absent', 'Absent'),
     ]
 
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    date = models.DateField(default=timezone.now)  # Defaults to today
-    time = models.TimeField(default=timezone.localtime)  # Converts to local time before saving
-    status = models.CharField(max_length=7, choices=STATUS_CHOICES, default='Check')
+    date = models.DateField(auto_now_add=True)  # Defaults to today
+    time = models.TimeField(auto_now_add=True)  # Converts to local time before saving
+    status = models.CharField(max_length=7, choices=STATUS_CHOICES, default='absent')
 
     def save(self, *args, **kwargs):
         # Convert UTC time to local time (IST) before saving
@@ -39,7 +39,6 @@ class Attendance(models.Model):
 
     def __str__(self):
         return f"{self.employee.first_name} {self.employee.last_name} - {self.status} on {self.date} - {self.time}"
-
 
 
 
