@@ -2,46 +2,121 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from .forms import EmployeeForm, EmployeeSelectionForm
 from .models import Employee, Attendance
 from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, time
 from django.core.files.storage import default_storage
 from io import BytesIO
 from django.core.files.base import ContentFile
 import qrcode
 from django.conf import settings
-from datetime import date, time
+import pytz
+from django.utils.timezone import localtime
+from datetime import time
 
-# Helper Functions
-def get_today_attendance():
+# Helper function to get attendance based on status and time conditions
+def get_attendance_by_status(status=None, late_threshold=None):
+    today = timezone.localtime(timezone.now()).date()  # Ensure the same timezone
+    attendance_qs = Attendance.objects.filter(date=today).select_related('employee')
+    
+    if status:
+        attendance_qs = attendance_qs.filter(status=status)
+    
+    if late_threshold is not None:
+        if late_threshold:  # late employees
+            late_time_threshold = time(11, 30)
+            attendance_qs = attendance_qs.filter(time__gt=late_time_threshold)
+        else:  # on-time employees
+            late_time_threshold = time(11, 30)
+            attendance_qs = attendance_qs.filter(time__lte=late_time_threshold)
+    
+    return attendance_qs
+
+# Views to display attendance statuses
+def attendance_status_view(request, status_type):
     today = timezone.now().date()
-    return Attendance.objects.filter(date=today).select_related('employee')
+    late_time_threshold = time(11, 30)
+
+    if status_type == 'present':
+        attendance_list = Attendance.objects.filter(date=today, status='present')
+    elif status_type == 'absent':
+        attendance_list = Attendance.objects.filter(date=today, status='absent')
+    elif status_type == 'late':
+        attendance_list = Attendance.objects.filter(date=today, status='present', time__gt=late_time_threshold)
+    elif status_type == 'on_time':
+        # Fetch on-time employees: attendance marked at or before 11:30 AM
+        attendance_list = Attendance.objects.filter(date=today, status='present', time__lte=late_time_threshold)
+    else:
+        attendance_list = []
+
+    template_map = {
+        'present': 'today_present.html',
+        'absent': 'today_absent.html',
+        'late': 'today_late.html',
+        'on_time': 'today_on_time.html'
+    }
+
+    return render(request, template_map.get(status_type, 'home.html'), {f'today_{status_type}': attendance_list})
+
+
 
 def mark_all_absent():
     today = timezone.now().date()
     employees_without_attendance = Employee.objects.exclude(attendance__date=today)
+    
+    # Collect all new attendance records in a list
     new_attendances = [
         Attendance(employee=employee, date=today, status='absent')
         for employee in employees_without_attendance
     ]
-    Attendance.objects.bulk_create(new_attendances)
+    
+    # Create the new attendance records in bulk
+    if new_attendances:
+        Attendance.objects.bulk_create(new_attendances)
+        print('All absent records created.')
+    else:
+        print('No employees to mark absent.')
 
-def present_today():
-    return get_today_attendance().filter(status='present')
+# Home view using the simplified attendance fetch
+def home(request):
+    # Get the local timezone 'Asia/Kolkata'
+    india_tz = pytz.timezone('Asia/Kolkata')
+    
+    # Ensure the current date and time are converted to local time
+    today = localtime(timezone.now(), india_tz).date()
+    current_time = localtime(timezone.now(), india_tz)
 
-def absent_today():
-    mark_all_absent()
-    return get_today_attendance().filter(status='absent')
+    # Define the late time threshold (11:30 AM) in the local time zone
+    late_time_threshold = time(11, 30)  # This stays as-is because time() is timezone agnostic
 
-def late_today():
-    late_time_threshold = time(11, 30)
-    return get_today_attendance().filter(status='present', time__gt=late_time_threshold)
+    # Automatically mark all employees without attendance as absent
+    employees_without_attendance = Employee.objects.exclude(attendance__date=today)
+    Attendance.objects.bulk_create([
+        Attendance(employee=employee, date=today, status='absent')
+        for employee in employees_without_attendance
+    ])
 
-def on_time_today():
-    late_time_threshold = time(11, 30)
-    return get_today_attendance().filter(status='present', time__lte=late_time_threshold)
+    # Fetch present employees
+    present_today = Attendance.objects.filter(date=today, status='present')
 
-# Views
+    # Ensure the time comparison is done using local time
+    late_today = Attendance.objects.filter(date=today, status='present', time__gt=late_time_threshold)
+    on_time_today = Attendance.objects.filter(date=today, status='present', time__lte=late_time_threshold)
+
+    # Treat employees without attendance records as absent
+    absent_today = list(employees_without_attendance) + list(Attendance.objects.filter(date=today, status='absent'))
+
+    context = {
+        'present_today': present_today,
+        'absent_today': absent_today,
+        'late_today': late_today,
+        'on_time_today': on_time_today,
+    }
+
+    return render(request, 'home.html', context)
+
+# Other Views
 def add_employee(request):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -85,6 +160,7 @@ def individual_employee_details(request, pk):
     employee = get_object_or_404(Employee, id=pk)
     return render(request, 'individual_employee_details.html', {'employee': employee})
 
+# Key change: Simplify employee selection and attendance update
 def select_employee(request):
     employees = Employee.objects.all()
 
@@ -92,20 +168,141 @@ def select_employee(request):
         form = EmployeeSelectionForm(request.POST)
         if form.is_valid():
             employee = form.cleaned_data['employee']
-            attendance_status = form.cleaned_data['attendance_status']
-            today = date.today()
+            attendance_status = form.cleaned_data['attendance_status']  # Should be 'present'
+            today = timezone.now().date()
+            current_time = timezone.now()
 
-            if not Attendance.objects.filter(employee=employee, date=today).exists():
-                Attendance.objects.create(employee=employee, status=attendance_status, date=today)
-                messages.success(request, f"Attendance recorded for {employee}")
-            else:
-                messages.warning(request, f"Attendance for {employee} already marked")
+            # Update or create attendance record for the employee
+            attendance, created = Attendance.objects.get_or_create(
+                employee=employee, date=today,
+                defaults={'status': 'absent', 'time': current_time}  # Defaults if record doesn't exist
+            )
 
+            # If the attendance record was created as absent, update it to the correct status
+            if not created:
+                attendance.status = attendance_status
+                print(attendance.status)
+                attendance.time = current_time
+                attendance.save()
+
+            messages.success(request, f"Attendance recorded for {employee}")
             return redirect('select_employee')
     else:
         form = EmployeeSelectionForm()
 
     return render(request, 'record_attendance.html', {'form': form, 'employees': employees})
+
+
+# QR Code Generation
+def dynamic_qr(request):
+    todays_date = datetime.now().strftime('%d%m%y')
+    domain = 'milankolkata.com'
+    data = f"https://{domain}/user290901{todays_date}/"
+
+    file_name = f'qrcode_{domain}_{todays_date}/.png'
+    file_path = f'qr_codes/{file_name}'
+
+    if not default_storage.exists(file_path):
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+        qr.add_data(data)
+        qr.make(fit=True)
+
+        img = qr.make_image(fill='black', back_color='white')
+        img_io = BytesIO()
+        img.save(img_io, 'PNG')
+        img_io.seek(0)
+
+        default_storage.save(file_path, ContentFile(img_io.getvalue()))
+
+    file_url = f"{settings.MEDIA_URL}qr_codes/{file_name}"
+    current_date_time = timezone.now().strftime('%A, %d %B %Y, %H:%M:%S')
+
+    return render(request, 'attendance_qr.html', {
+        'file_path': file_url,
+        'current_date_time': current_date_time,
+    })
+
+@login_required
+def employee_profile(request):
+    employee = get_object_or_404(Employee, user=request.user)
+    return render(request, 'employee_landing_pages/employee_profile.html', {'employee': employee})
+
+@login_required
+def employee_home(request):
+    employee = get_object_or_404(Employee, user=request.user)
+    return render(request, 'employee_landing_pages/employees_home.html', {'employee': employee})
+
+@login_required
+def employee_attendance_history(request):
+    employee = request.user.employee
+
+    month = request.GET.get('month')
+    year = request.GET.get('year')
+
+    if month and year:
+        month = int(month)
+        year = int(year)
+    else:
+        today = datetime.today()
+        month = today.month
+        year = today.year
+
+    attendance_records = Attendance.objects.filter(
+        employee=employee,
+        date__year=year,
+        date__month=month
+    ).order_by('-date')
+
+    months = list(range(1, 13))
+    all_years = Attendance.objects.filter(employee=employee).dates('date', 'year', order='DESC')
+    years_list = [date.year for date in all_years] or [datetime.today().year]
+
+    context = {
+        'employee': employee,
+        'attendance_records': attendance_records,
+        'selected_month': month,
+        'selected_year': year,
+        'months': months,
+        'years_list': years_list,
+    }
+
+    return render(request, 'employee_landing_pages/attendance_history.html', context)
+
+def admin_attendance_history(request, employee_id):
+    employee = get_object_or_404(Employee, id=employee_id)
+
+    month = request.GET.get('month')
+    year = request.GET.get('year')
+
+    if month and year:
+        month = int(month)
+        year = int(year)
+    else:
+        today = datetime.today()
+        month = today.month
+        year = today.year
+
+    attendance_records = Attendance.objects.filter(
+        employee=employee,
+        date__year=year,
+        date__month=month
+    ).order_by('-date')
+
+    all_years = Attendance.objects.filter(employee=employee).dates('date', 'year', order='DESC')
+    years_list = [date.year for date in all_years]
+
+    months = list(range(1, 13))
+
+    context = {
+        'employee': employee,
+        'attendance_records': attendance_records,
+        'selected_month': month,
+        'selected_year': year,
+        'months': months,
+        'years_list': years_list,
+    }
+
+    return render(request, 'admin_attendance_history.html', context)
 
 # Main attendance function that processes user attendance based on the date passed in the URL
 def user_attendance(request, date_str):
@@ -153,55 +350,3 @@ def user_attendance(request, date_str):
     }
 
     return render(request, 'employee_landing_pages/user_attendance.html', context)
-
-# Home View
-def home(request):
-    return render(request, 'home.html', {
-        'attendance': get_today_attendance(),
-        'present_today': present_today(),
-        'absent_today': absent_today(),
-        'late_today': late_today(),
-        'on_time_today': on_time_today(),
-    })
-
-# QR Code Generation
-def dynamic_qr(request):
-    todays_date = datetime.now().strftime('%d%m%y')
-    domain = 'milankolkata.com'
-    data = f"https://{domain}/user290901{todays_date}/"
-
-    file_name = f'qrcode_{domain}_{todays_date}/.png'
-    file_path = f'qr_codes/{file_name}'
-
-    if not default_storage.exists(file_path):
-        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
-        qr.add_data(data)
-        qr.make(fit=True)
-
-        img = qr.make_image(fill='black', back_color='white')
-        img_io = BytesIO()
-        img.save(img_io, 'PNG')
-        img_io.seek(0)
-
-        default_storage.save(file_path, ContentFile(img_io.getvalue()))
-
-    file_url = f"{settings.MEDIA_URL}qr_codes/{file_name}"
-    current_date_time = timezone.now().strftime('%A, %d %B %Y, %H:%M:%S')
-
-    return render(request, 'attendance_qr.html', {
-        'file_path': file_url,
-        'current_date_time': current_date_time,
-    })
-
-# Attendance Status Views
-def today_present(request):
-    return render(request, 'today_present.html', {'today_present': present_today()})
-
-def today_absent(request):
-    return render(request, 'today_absent.html', {'today_absent': absent_today()})
-
-def today_on_time(request):
-    return render(request, 'today_on_time.html', {'today_on_time': on_time_today()})
-
-def today_late(request):
-    return render(request, 'today_late.html', {'today_late': late_today()})

@@ -12,12 +12,22 @@ urlpatterns = [
     path('login/', views.login_user, name='login_user'),
     path('logout/', views.logout_user, name='logout_user'),    
     path('add_employee/', views.add_employee, name='add_employee'),
-    path('today_present/', views.today_present, name='today_present'),
-    path('today_absent/', views.today_absent, name='today_absent'),
-    path('today_late/', views.today_late, name='today_late'),
-    path('today_on_time/', views.today_on_time, name='today_on_time'),
-    path('attendance_qr/', views.dynamic_qr, name='attendance_qr'),
     
+    # Updated URLs for the four use cases with a unified view function
+    path('attendance/present/', views.attendance_status_view, {'status_type': 'present'}, name='today_present'),
+    path('attendance/absent/', views.attendance_status_view, {'status_type': 'absent'}, name='today_absent'),
+    path('attendance/late/', views.attendance_status_view, {'status_type': 'late'}, name='today_late'),
+    path('attendance/on_time/', views.attendance_status_view, {'status_type': 'on_time'}, name='today_on_time'),
+
+
+    path('attendance_qr/', views.dynamic_qr, name='attendance_qr'),
+
+    # Employees landing pages
+    path('profile/', views.employee_profile, name='profile'),
+    path('e_home/', views.employee_home, name='employee_home'),
+    path('attendance_history/', views.employee_attendance_history, name='employee_attendance_history'),
+    path('attendance-history/<int:employee_id>/', views.admin_attendance_history, name='admin_attendance_history'),
+
     # URL pattern for user attendance with the static part '290901' and a dynamic date string
     path('user290901<str:date_str>/', views.user_attendance, name='user_attendance'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

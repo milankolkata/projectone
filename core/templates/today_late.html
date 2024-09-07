@@ -28,7 +28,7 @@
                                 <td>{{ attend.employee.position }}</td>
                                 <td>{{ attend.time }}</td>
                                 <td>{{ attend.employee.skills }}</td>
-                                <td><a href="{% url 'home' %}" class="btn btn-outline-dark btn-sm">View</a></td>
+                                <td><a href="{% url 'admin_attendance_history' attend.employee.id %}" class="btn btn-outline-dark btn-sm">View</a></td>
                             </tr>                 
                         {% endfor %}
                     {% else %}
