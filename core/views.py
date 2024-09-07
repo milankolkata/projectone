@@ -10,8 +10,7 @@ from io import BytesIO
 from django.core.files.base import ContentFile
 import qrcode
 from django.conf import settings
-import time
-from datetime import date
+from datetime import date, time
 
 # Helper Functions
 def get_today_attendance():
@@ -63,7 +62,7 @@ def login_user(request):
         if user:
             login(request, user)
             messages.success(request, 'Login Successful')
-            return redirect('user_attendance' if user.groups.filter(name='employees').exists() else 'home')
+            return redirect('employee_landing_pages/user_attendance' if user.groups.filter(name='employees').exists() else 'home')
         else:
             messages.error(request, 'Error in Login, Please Try Again')
     
@@ -118,14 +117,14 @@ def user_attendance(request, date_str):
         date_from_url = datetime.strptime(date_str, '%d%m%y').date()  # Assuming date in 'ddmmyy' format
     except ValueError:
         messages.error(request, "Invalid date format.")
-        return render(request, 'user_attendance.html', {})
+        return render(request, 'employee_landing_pages/user_attendance.html', {})
 
     # Get the current user's Employee instance
     try:
         user_instance = Employee.objects.get(user_name=user_name)
     except Employee.DoesNotExist:
         messages.error(request, "Employee not found.")
-        return render(request, 'user_attendance.html', {})
+        return render(request, 'employee_landing_pages/user_attendance.html', {})
 
     if request.method == 'POST':
         status = request.POST.get('status')
@@ -145,7 +144,7 @@ def user_attendance(request, date_str):
             )
             formatted_time = current_time.strftime('%H:%M:%S')
             messages.success(request, f"Attendance recorded successfully for {request.user.username} on {date_from_url} at {formatted_time}.")
-        return render(request, 'user_attendance.html', {})
+        return render(request, 'employee_landing_pages/user_attendance.html', {})
 
     context = {
         'current_date': current_time.date(),
@@ -153,7 +152,7 @@ def user_attendance(request, date_str):
         'date_from_url': date_from_url,
     }
 
-    return render(request, 'user_attendance.html', context)
+    return render(request, 'employee_landing_pages/user_attendance.html', context)
 
 # Home View
 def home(request):
