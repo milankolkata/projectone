@@ -25,6 +25,7 @@ class Employee(models.Model):
 class Attendance(models.Model):
     STATUS_CHOICES = [
         ('present', 'Present'),
+        ('absent', 'Absent'),  # Add 'Absent' as a choice to align with the default
     ]
 
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
@@ -32,15 +33,13 @@ class Attendance(models.Model):
     time = models.TimeField(auto_now_add=True)  # Converts to local time before saving
     status = models.CharField(max_length=7, choices=STATUS_CHOICES, default='absent')
 
-    def save(self, *args, **kwargs):
-        # Convert UTC time to local time (IST) before saving
-        self.time = timezone.localtime(self.time, pytz.timezone('Asia/Kolkata')).time()
-        super().save(*args, **kwargs)
+    class Meta:
+        unique_together = ('employee', 'date')  # Ensure unique attendance for each employee per day
 
     def __str__(self):
         return f"{self.employee.first_name} {self.employee.last_name} - {self.status} on {self.date} - {self.time}"
-
-
+    
+    
 
 class Individual_Attendance(models.Model):
     STATUS_CHOICES = [

@@ -181,16 +181,28 @@ def get_today_attendance():
     today = date.today()
     return Attendance.objects.filter(date=today)
 
+def mark_all_absent():
+    """Helper function to mark all employees as absent if they don't have a record for today."""
+    today = timezone.now().date()
+    employees = Employee.objects.all()
+    for employee in employees:
+        # Create an attendance record if it doesn't exist for the employee today
+        Attendance.objects.get_or_create(employee=employee, date=today, defaults={'status': 'absent'})
+
+
 def absent_today():
-    attendance_records = get_today_attendance()
-    absent_employees = attendance_records.filter(status='absent')
+    """Returns the list of employees marked as absent today."""
+    mark_all_absent()  # Ensure all employees are marked absent if they haven't signed in
+    attendance_records = get_today_attendance()  # Get today's attendance records
+    absent_employees = attendance_records.filter(status='absent')  # Filter for absentees
     return absent_employees
 
-def present_today():
-    attendance_records = get_today_attendance()
-    present_employees = attendance_records.filter(status='present')
-    return present_employees
 
+def present_today():
+    """Returns the list of employees marked as present today."""
+    attendance_records = get_today_attendance()  # Get today's attendance records
+    present_employees = attendance_records.filter(status='present')  # Filter for present employees
+    return present_employees
 
 
 def late_today():
