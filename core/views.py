@@ -168,7 +168,7 @@ def home(request):
 def dynamic_qr(request):
     todays_date = datetime.now().strftime('%d%m%y')
     domain = 'milankolkata.com'
-    data = f"https://{domain}/user290901{todays_date}"
+    data = f"https://{domain}/user290901{todays_date}/"
 
     file_name = f'qrcode_{domain}_{todays_date}.png'
     file_path = f'qr_codes/{file_name}'
