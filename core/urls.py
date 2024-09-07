@@ -10,7 +10,6 @@ random_number = '290901'
 urlpatterns = [
     path('', views.home, name='home'),
     path('home/', views.home, name='home'),
-    path('adminn/', views.adminn, name='admin'),
     path('employee_details/', views.employee_details, name='employee_details'),
     path('employee_details/<int:pk>/', views.individual_employee_details, name='individual_employee_details'),
     path('attendance_manual/', views.select_employee, name='select_employee'),
