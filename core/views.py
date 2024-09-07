@@ -170,7 +170,7 @@ def dynamic_qr(request):
     domain = 'milankolkata.com'
     data = f"https://{domain}/user290901{todays_date}/"
 
-    file_name = f'qrcode_{domain}_{todays_date}.png'
+    file_name = f'qrcode_{domain}_{todays_date}/.png'
     file_path = f'qr_codes/{file_name}'
 
     if not default_storage.exists(file_path):
