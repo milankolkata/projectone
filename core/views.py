@@ -4,25 +4,19 @@ from .models import Employee, Attendance
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.utils import timezone
-from datetime import date, time, datetime
-from django.core.cache import cache
+from datetime import datetime
 from django.core.files.storage import default_storage
 from io import BytesIO
 from django.core.files.base import ContentFile
 import qrcode
 from django.conf import settings
+import time
+from datetime import date
 
 # Helper Functions
 def get_today_attendance():
     today = timezone.now().date()
     return Attendance.objects.filter(date=today).select_related('employee')
-
-def get_employees():
-    employees = cache.get('all_employees')
-    if not employees:
-        employees = Employee.objects.all()
-        cache.set('all_employees', employees, 60*60)  # Cache for 1 hour
-    return employees
 
 def mark_all_absent():
     today = timezone.now().date()
@@ -48,7 +42,6 @@ def on_time_today():
     late_time_threshold = time(11, 30)
     return get_today_attendance().filter(status='present', time__lte=late_time_threshold)
 
-
 # Views
 def add_employee(request):
     if not request.user.is_authenticated:
@@ -61,7 +54,6 @@ def add_employee(request):
         return redirect('home')
     
     return render(request, 'add_employee.html', {"form": form})
-
 
 def login_user(request):
     if request.method == 'POST':
@@ -77,17 +69,14 @@ def login_user(request):
     
     return render(request, 'login.html')
 
-
 def logout_user(request):
     logout(request)
     messages.success(request, 'Logout Successful')
     return redirect('login_user')
 
-
 def employee_details(request):
-    employees = get_employees()  # Cached employee data
+    employees = Employee.objects.all()
     return render(request, 'employee_details.html', {'employees': employees})
-
 
 def individual_employee_details(request, pk):
     if not request.user.is_authenticated:
@@ -97,9 +86,8 @@ def individual_employee_details(request, pk):
     employee = get_object_or_404(Employee, id=pk)
     return render(request, 'individual_employee_details.html', {'employee': employee})
 
-
 def select_employee(request):
-    employees = get_employees()  # Cached employee data
+    employees = Employee.objects.all()
 
     if request.method == "POST":
         form = EmployeeSelectionForm(request.POST)
@@ -120,41 +108,52 @@ def select_employee(request):
 
     return render(request, 'record_attendance.html', {'form': form, 'employees': employees})
 
-
+# Main attendance function that processes user attendance based on the date passed in the URL
 def user_attendance(request, date_str):
     current_time = timezone.now()
-
+    user_name = request.user.username
+    
+    # Convert the date from URL to a datetime object
     try:
-        date_from_url = datetime.strptime(date_str, '%d%m%y').date()
+        date_from_url = datetime.strptime(date_str, '%d%m%y').date()  # Assuming date in 'ddmmyy' format
     except ValueError:
         messages.error(request, "Invalid date format.")
         return render(request, 'user_attendance.html', {})
 
+    # Get the current user's Employee instance
     try:
-        user_instance = Employee.objects.get(user_name=request.user.username)
+        user_instance = Employee.objects.get(user_name=user_name)
     except Employee.DoesNotExist:
         messages.error(request, "Employee not found.")
         return render(request, 'user_attendance.html', {})
 
     if request.method == 'POST':
         status = request.POST.get('status')
-        if not Attendance.objects.filter(employee=user_instance, date=date_from_url).exists():
+
+        # Check if attendance has already been marked for the given date
+        attendance_exists = Attendance.objects.filter(employee=user_instance, date=date_from_url).exists()
+
+        if attendance_exists:
+            messages.warning(request, f"Attendance for {request.user.username} has already been marked for {date_from_url}.")
+        else:
+            # Use timezone-aware time and save attendance for the given date
             Attendance.objects.create(
                 employee=user_instance,
                 status=status,
                 date=date_from_url,
-                time=current_time
+                time=current_time,  # Save the full timezone-aware datetime here
             )
-            messages.success(request, f"Attendance recorded for {request.user.username}.")
-        else:
-            messages.warning(request, f"Attendance already marked for {date_from_url}.")
+            formatted_time = current_time.strftime('%H:%M:%S')
+            messages.success(request, f"Attendance recorded successfully for {request.user.username} on {date_from_url} at {formatted_time}.")
+        return render(request, 'user_attendance.html', {})
 
-    return render(request, 'user_attendance.html', {
+    context = {
         'current_date': current_time.date(),
         'current_time': current_time.strftime('%H:%M:%S'),
         'date_from_url': date_from_url,
-    })
+    }
 
+    return render(request, 'user_attendance.html', context)
 
 # Home View
 def home(request):
@@ -166,13 +165,11 @@ def home(request):
         'on_time_today': on_time_today(),
     })
 
-
 # QR Code Generation
 def dynamic_qr(request):
-    random_number = '290901'
     todays_date = datetime.now().strftime('%d%m%y')
     domain = 'milankolkata.com'
-    data = f"https://{domain}/user{random_number}{todays_date}"
+    data = f"https://{domain}/user290901{todays_date}"
 
     file_name = f'qrcode_{domain}_{todays_date}.png'
     file_path = f'qr_codes/{file_name}'
@@ -196,7 +193,6 @@ def dynamic_qr(request):
         'file_path': file_url,
         'current_date_time': current_date_time,
     })
-
 
 # Attendance Status Views
 def today_present(request):
